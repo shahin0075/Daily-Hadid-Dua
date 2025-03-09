@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আল-হাদিস ও দুআ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.maateen.me/kfgqpc-uthmanic-hafs/style.css" rel="stylesheet">
+    <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+    <style>
+        :root {
+            --islamic-green: #2ca4ab;
+            --gold: #cda45e;
+            --dark-bg: #1a1a1a;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: #ffffff;
+            font-family: 'SolaimanLipi', sans-serif;
+        }
+
+        .islamic-pattern {
+            background: url('islamic-pattern.png') repeat;
+            opacity: 0.1;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--gold);
+            border: none;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(45deg, var(--islamic-green), #1f797d);
+            color: white !important;
+            border-radius: 5px;
+        }
+
+        .content-card {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+
+        .arabic-text {
+            font-family: 'KFGQPC Uthmanic Script HAFS', sans-serif;
+            font-size: 2rem;
+            line-height: 2.5;
+            color: #e4d096;
+            text-align: right;
+        }
+
+        .refresh-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            transition: all 0.3s;
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: var(--gold);
+            width: 50px;
+            height: 50px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="islamic-pattern"></div>
+    
+    <header class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="display-4" style="color: var(--gold);">আল-হাদিস ও দুআ</h1>
+                <p class="lead">প্রতিদিনের হাদিস ও দুআ সংগ্রহ</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <ul class="nav nav-tabs justify-content-center" id="mainTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#hadith">হাদিস</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#dua">দুআ</a>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-4">
+            <!-- হাদিস ট্যাব -->
+            <div class="tab-pane fade show active" id="hadith">
+                <div class="content-card p-4 mb-4 position-relative">
+                    <button onclick="loadHadith()" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div id="hadithContent" class="fade-in"></div>
+                </div>
+            </div>
+
+            <!-- দুআ ট্যাব -->
+            <div class="tab-pane fade" id="dua">
+                <div class="content-card p-4 mb-4 position-relative">
+                    <button onclick="loadDua()" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div id="duaContent" class="fade-in"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const fontAwesome = document.createElement('link');
+        fontAwesome.rel = 'stylesheet';
+        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+        document.head.appendChild(fontAwesome);
+
+        async function fetchWithHeaders(url) {
+            return fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 14; 22120RN86G Build/UP1A.231005.007) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.39 Mobile Safari/537.36',
+                    'Accept': 'application/json',
+                    'origin': 'https://muslimbangla.com',
+                    'referer': 'https://muslimbangla.com/'
+                }
+            });
+        }
+
+        async function loadHadith() {
+            const container = document.getElementById('hadithContent');
+            container.innerHTML = `<div class="text-center py-4"><div class="loading-spinner"></div></div>`;
+
+            try {
+                const response = await fetchWithHeaders('https://api.topofstacksoftware.com/hadith/api/v2/hadith/random');
+                const data = await response.json();
+                
+                if(data.data && data.data.length > 0) {
+                    const hadith = data.data[0];
+                    container.innerHTML = `
+                        <div class="fade-in">
+                            <h4 class="mb-4" style="color: var(--gold)">${hadith.title}</h4>
+                            <div class="arabic-text mb-4">${hadith.description_ar}</div>
+                            <p class="lead">${hadith.description}</p>
+                            <div class="mt-4 text-muted">হাদিস নং: ${hadith.hadith_number}</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div class="alert alert-warning">কোন হাদিস পাওয়া যায়নি</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-danger">হাদিস লোড করতে সমস্যা হয়েছে</div>`;
+            }
+        }
+
+        async function loadDua() {
+            const container = document.getElementById('duaContent');
+            container.innerHTML = `<div class="text-center py-4"><div class="loading-spinner"></div></div>`;
+
+            try {
+                const response = await fetchWithHeaders('https://api.muslimbangla.com/dua/random');
+                const data = await response.json();
+
+                if(data.data && data.data.length > 0) {
+                    const dua = data.data[0];
+                    container.innerHTML = `
+                        <div class="fade-in">
+                            <h4 class="mb-4" style="color: var(--gold)">${dua.title}</h4>
+                            <div class="arabic-text mb-4">${dua.dua}</div>
+                            ${dua.transliteration !== 'null' ? `<p class="lead">${dua.transliteration}</p>` : ''}
+                            <p class="text-muted mt-3">${dua.meaning}</p>
+                            <div class="mt-4 text-muted">উৎস: ${dua.source}</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div class="alert alert-warning">কোন দুআ পাওয়া যায়নি</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-danger">দুআ লোড করতে সমস্যা হয়েছে</div>`;
+            }
+        }
+
+        // প্রথম লোড
+        loadHadith();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
